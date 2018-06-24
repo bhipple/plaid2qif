@@ -64,6 +64,7 @@ plaid2qif download \
   * `account-type` is an account identifier type as [documented here](https://github.com/Gnucash/gnucash/blob/cdb764fec525642bbe85dd5a0a49ec967c55f089/gnucash/import-export/qif-imp/file-format.txt#L23).
   * `account-id` is Plaid's account ID for the account you want to download, as obtained via `list-accounts` above.
   * By default, output will go to stdout to be redirected.  If you want it to be written to a location use the `output-dir` parameter.
+  * By default, pending transactions will be included. If you'd like to ignore these, pass `--ignore-pending`.
 
 [![GitHub watchers](https://img.shields.io/github/watchers/badges/shields.svg?style=social&label=Watch&style=flat-square)]()
 [![Crates.io](https://img.shields.io/crates/l/rustc-serialize.svg?style=flat-square)]()

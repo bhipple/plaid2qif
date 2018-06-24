@@ -6,7 +6,7 @@ Download financial transactions from Plaid and convert to QIF files.
 Usage:
   plaid2qif save-access-token --institution=<name> --public-token=<token> [--verbose]
   plaid2qif list-accounts --institution=<name> [--verbose]
-  plaid2qif download --institution=<name> --account=<account-name> --account-type=<type> --account-id=<acct-id> --from=<from-date> --to=<to-date> [--output-format=<format>] [--output-dir=<path>] [--suppress-warnings=<tf>] [--verbose]
+  plaid2qif download --institution=<name> --account=<account-name> --account-type=<type> --account-id=<acct-id> --from=<from-date> --to=<to-date> [--output-format=<format>] [--output-dir=<path>] [--ignore-pending] [--suppress-warnings=<tf>] [--verbose]
   plaid2qif -h | --help
   plaid2qif --version
 
@@ -22,6 +22,7 @@ Options:
   --to=<to-date>            End of date range.
   --output-format=<format>  Output format either 'raw', 'csv' or 'qif'. [Default: qif]
   --output-dir=<path>       Location to output file to. (Default: output to stdout)
+  --ignore-pending          Ignore pending transactions.
   --suppress-warnings=<tf>  Suppress warnings about running in a development environment. [Default: True]
   --verbose                 Verbose logging output.
 """
@@ -39,7 +40,7 @@ CFG_DIR='./cfg'
 
 PLAID_ENV = 'development' ## sandbox', 'development', or 'production'
 
-def download(account, fromto, output, suppress_warnings):
+def download(account, fromto, output, ignore_pending, suppress_warnings):
   client = open_client(suppress_warnings)
   access_token = read_access_token(account['institution'])
   account_name = account['name']
@@ -66,6 +67,9 @@ def download(account, fromto, output, suppress_warnings):
     while  txn_batch > 0 and txn_batch <= txn_total:
       
       for t in response['transactions']:
+        if ignore_pending and t['pending']:
+          info('skipping pending transaction for [%s: %s]' % (t['date'], t['name']))
+          continue
         info('writing record for [%s: %s]' % (t['date'], t['name']))
         debug('%s' % t)
         w.write_record(t)
@@ -161,8 +165,9 @@ def main():
       'dir': args['--output-dir'],
       'format': args['--output-format']
     }
+    ignore_pending = args['--ignore-pending']
     suppress_warnings = args['--suppress-warnings']
-    download(account, fromto, output, suppress_warnings)
+    download(account, fromto, output, ignore_pending, suppress_warnings)
 
 if __name__ == '__main__':
   main()
